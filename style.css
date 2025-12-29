@@ -1,5 +1,5 @@
 * { margin:0; padding:0; box-sizing:border-box; }
-body { overflow-x:hidden; font-family: Arial, sans-serif; background:black; }
+body { overflow-x:hidden; font-family: Arial, sans-serif; background:black; height:400vh; }
 
 canvas { position:fixed; top:0; left:0; display:block; }
 
@@ -14,3 +14,21 @@ canvas { position:fixed; top:0; left:0; display:block; }
 .ui p { opacity:0.7; margin-bottom:20px; }
 .links a { display:block; color:white; text-decoration:none; margin-bottom:8px; opacity:0.8; }
 .links a:hover { opacity:1; }
+
+/* Cursor circle */
+.cursor-circle {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255,255,255,0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: breathe 2s infinite ease-in-out;
+  z-index: 9999;
+}
+
+@keyframes breathe {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+}
