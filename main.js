@@ -18,7 +18,7 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0x404040, 0.5));
 
 // ===== OBJECTS =====
-// 1) Torus Knot
+// Section 1: Torus Knot
 const torus = new THREE.Mesh(
   new THREE.TorusKnotGeometry(8,2,100,16),
   new THREE.MeshStandardMaterial({ color:0xffffff, wireframe:true })
@@ -26,7 +26,7 @@ const torus = new THREE.Mesh(
 torus.position.y = 0;
 scene.add(torus);
 
-// 2) Cube cluster
+// Section 2: Cubes
 const cubes = [];
 for(let i=0;i<50;i++){
   const geo = new THREE.BoxGeometry(1.5,1.5,1.5);
@@ -37,14 +37,16 @@ for(let i=0;i<50;i++){
   cubes.push(cube);
 }
 
-// 3) Load Blender/GLTF model
-const loader = new THREE.GLTFLoader();
-loader.load('assets/models/your_model.glb', function(gltf){
-  const model = gltf.scene;
-  model.position.set(0,-200,0);
-  model.scale.set(2,2,2);
-  scene.add(model);
-});
+// Section 3: Spheres
+const spheres = [];
+for(let i=0;i<30;i++){
+  const geo = new THREE.SphereGeometry(2,16,16);
+  const mat = new THREE.MeshStandardMaterial({ color:0xffaa00, wireframe:true });
+  const s = new THREE.Mesh(geo, mat);
+  s.position.set((Math.random()-0.5)*30, -200-Math.random()*50, (Math.random()-0.5)*30);
+  scene.add(s);
+  spheres.push(s);
+}
 
 // ===== PARTICLES =====
 const particleGeo = new THREE.BufferGeometry();
@@ -67,7 +69,15 @@ gsap.to(camera.position, {
     scrub: 1
   }
 });
-gsap.to(torus.rotation, { y: Math.PI*2, scrollTrigger:{trigger:document.body, start:"top top", end:"bottom bottom", scrub:true} });
+gsap.to(torus.rotation, {
+  y: Math.PI*2,
+  scrollTrigger: {
+    trigger: document.body,
+    start: "top top",
+    end: "bottom bottom",
+    scrub: true
+  }
+});
 
 // ===== MOUSE PARALLAX =====
 document.addEventListener("mousemove", (e)=>{
@@ -78,16 +88,19 @@ document.addEventListener("mousemove", (e)=>{
 // ===== CURSOR FOLLOW =====
 const cursor = document.querySelector('.cursor-circle');
 document.addEventListener('mousemove', (e)=>{
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
+  cursor.style.left = e.clientX+'px';
+  cursor.style.top = e.clientY+'px';
 });
 
 // ===== ANIMATE =====
 function animate(){
   requestAnimationFrame(animate);
+
   torus.rotation.x += 0.002;
   torus.rotation.y += 0.003;
   cubes.forEach(c=>{ c.rotation.x+=0.001; c.rotation.y+=0.002; });
+  spheres.forEach(s=>{ s.rotation.y +=0.001; });
+
   renderer.render(scene, camera);
 }
 animate();
