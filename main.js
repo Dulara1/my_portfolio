@@ -1,78 +1,65 @@
 // ===== SCENE =====
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000000, 10, 150);
+scene.fog = new THREE.Fog(0x000000, 10, 500);
 
 // ===== CAMERA =====
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.z = 40;
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 50);
 
 // ===== RENDERER =====
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector("#bg"),
-  antialias: true
-});
+const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("#bg"), antialias:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
 // ===== LIGHTS =====
 const light = new THREE.PointLight(0xffffff, 1.5);
-light.position.set(50, 50, 50);
+light.position.set(50,50,50);
 scene.add(light);
 scene.add(new THREE.AmbientLight(0x404040, 0.5));
 
 // ===== OBJECTS =====
-// Section 1: Torus Knot
+// 1) Torus Knot
 const torus = new THREE.Mesh(
-  new THREE.TorusKnotGeometry(8, 2, 100, 16),
-  new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe:true })
+  new THREE.TorusKnotGeometry(8,2,100,16),
+  new THREE.MeshStandardMaterial({ color:0xffffff, wireframe:true })
 );
 torus.position.y = 0;
 scene.add(torus);
 
-// Section 2: Cube Cluster
+// 2) Cube cluster
 const cubes = [];
-for(let i=0; i<50; i++){
+for(let i=0;i<50;i++){
   const geo = new THREE.BoxGeometry(1.5,1.5,1.5);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe:true });
+  const mat = new THREE.MeshStandardMaterial({ color:0xffffff, wireframe:true });
   const cube = new THREE.Mesh(geo, mat);
-  cube.position.set(
-    (Math.random()-0.5)*40,
-    -50 - Math.random()*50,
-    (Math.random()-0.5)*40
-  );
+  cube.position.set((Math.random()-0.5)*40, -100-Math.random()*50, (Math.random()-0.5)*40);
   scene.add(cube);
   cubes.push(cube);
 }
 
-// ===== PARTICLES =====
-const particlesGeo = new THREE.BufferGeometry();
-const particlesCount = 500;
-const posArray = new Float32Array(particlesCount*3);
-
-for(let i=0; i<particlesCount*3; i++){
-  posArray[i] = (Math.random()-0.5)*200;
-}
-
-particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-const particlesMat = new THREE.PointsMaterial({
-  color:0xffffff,
-  size:0.5
+// 3) Load Blender/GLTF model
+const loader = new THREE.GLTFLoader();
+loader.load('assets/models/your_model.glb', function(gltf){
+  const model = gltf.scene;
+  model.position.set(0,-200,0);
+  model.scale.set(2,2,2);
+  scene.add(model);
 });
 
-const particles = new THREE.Points(particlesGeo, particlesMat);
+// ===== PARTICLES =====
+const particleGeo = new THREE.BufferGeometry();
+const particleCount = 500;
+const positions = new Float32Array(particleCount*3);
+for(let i=0;i<particleCount*3;i++){ positions[i] = (Math.random()-0.5)*300; }
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+const particleMat = new THREE.PointsMaterial({ color:0xffffff, size:0.5 });
+const particles = new THREE.Points(particleGeo, particleMat);
 scene.add(particles);
 
-// ===== GSAP SCROLL ANIMATION =====
+// ===== GSAP SCROLL =====
 gsap.registerPlugin(ScrollTrigger);
-
 gsap.to(camera.position, {
-  y: -100,
+  y: -400,
   scrollTrigger: {
     trigger: document.body,
     start: "top top",
@@ -80,41 +67,33 @@ gsap.to(camera.position, {
     scrub: 1
   }
 });
-
-gsap.to(torus.rotation, {
-  y: Math.PI*2,
-  scrollTrigger: {
-    trigger: document.body,
-    start: "top top",
-    end: "bottom bottom",
-    scrub: true
-  }
-});
+gsap.to(torus.rotation, { y: Math.PI*2, scrollTrigger:{trigger:document.body, start:"top top", end:"bottom bottom", scrub:true} });
 
 // ===== MOUSE PARALLAX =====
 document.addEventListener("mousemove", (e)=>{
-  torus.rotation.x = e.clientY * 0.001;
-  torus.rotation.y = e.clientX * 0.001;
+  camera.rotation.x = e.clientY*0.0005;
+  camera.rotation.y = e.clientX*0.0005;
+});
+
+// ===== CURSOR FOLLOW =====
+const cursor = document.querySelector('.cursor-circle');
+document.addEventListener('mousemove', (e)=>{
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
 });
 
 // ===== ANIMATE =====
 function animate(){
   requestAnimationFrame(animate);
-
-  torus.rotation.z += 0.002;
-
-  // Move cubes upward slowly
-  cubes.forEach(c=>{
-    c.position.y += 0.05;
-    if(c.position.y > 10) c.position.y = -50;
-  });
-
+  torus.rotation.x += 0.002;
+  torus.rotation.y += 0.003;
+  cubes.forEach(c=>{ c.rotation.x+=0.001; c.rotation.y+=0.002; });
   renderer.render(scene, camera);
 }
 animate();
 
 // ===== RESIZE =====
-window.addEventListener("resize", ()=>{
+window.addEventListener('resize', ()=>{
   camera.aspect = window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
